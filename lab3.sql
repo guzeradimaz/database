@@ -1,0 +1,1 @@
+docker run -d -p 1521:1521 -e ORACLE_PASSWORD=12345 gvenzl/oracle-xe 
