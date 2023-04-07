@@ -24,7 +24,7 @@ create or replace PROCEDURE MOVE_PROCEDURE (
 BEGIN
     FOR src IN (SELECT line, text FROM ALL_SOURCE WHERE OWNER = p_source_schema AND NAME = p_procedure_name) LOOP
     IF src.line = 1 THEN
-    query_string := 'CREATE OR REPLACE PROCEDURE ' ||  p_target_schema  || '.' ||  p_procedure_name  || ' AS ';
+    query_string := 'CREATE OR REPLACE ' || REPLACE(src.text, p_procedure_name, p_target_schema || '.'  || p_procedure_name);
     
     ELSE
     
@@ -42,21 +42,20 @@ create or replace PROCEDURE MOVE_PACKAGE(
 ) IS
     package_exists NUMBER;
     package_spec CLOB;
-    sql_stm VARCHAR2(500);
+    query_string VARCHAR2(500);
 BEGIN
-    -- Check if package exists in the target schema
-    SELECT COUNT(*) INTO package_exists FROM all_objects WHERE object_type = 'PACKAGE' AND object_name = package_name AND owner = prod_schema_name;
-
-    IF package_exists > 0 THEN
-        -- Drop the existing package
-        EXECUTE IMMEDIATE 'DROP PACKAGE ' || prod_schema_name ||  '.' || package_name;
-    END IF;
+    FOR src IN (SELECT line, text FROM ALL_SOURCE WHERE OWNER = dev_schema_name AND NAME = package_name) LOOP
+    IF src.line = 1 THEN
+    query_string := 'CREATE OR REPLACE ' ||  REPLACE(src.text, package_name, prod_schema_name || '.' ||  package_name);
     
-    sql_stm := 'CREATE PACKAGE ' || prod_schema_name  || '.' ||  package_name ||  ' AS END ' || package_name || ';';
-    EXECUTE IMMEDIATE sql_stm;
+    ELSE
+    
+    query_string := query_string || src.text;
+    END IF;
+    END LOOP;
+    EXECUTE IMMEDIATE query_string;
 
 END MOVE_PACKAGE;
-
 
 create or replace PROCEDURE MOVE_INDEX (
     dev_schema_name IN VARCHAR2,
@@ -97,7 +96,7 @@ create or replace PROCEDURE MOVE_FUNC (
 BEGIN
     FOR src IN (SELECT line, text FROM ALL_SOURCE WHERE OWNER = p_source_schema AND NAME = p_procedure_name) LOOP
     IF src.line = 1 THEN
-    query_string := 'CREATE OR REPLACE FUNCTION ' ||  p_target_schema ||  '.' ||  p_procedure_name ||  ' RETURN VARCHAR2 AS ';
+    query_string := 'CREATE OR REPLACE ' || REPLACE(src.text, p_procedure_name, p_target_schema || '.' ||  p_procedure_name);
     
     ELSE
     
