@@ -332,12 +332,10 @@ BEGIN
     END LOOP;
 
 
---     Remove duplicates and order by dependency
     EXECUTE IMMEDIATE 'SELECT DISTINCT object_name FROM TEMP_TABLE ORDER BY object_name' BULK COLLECT INTO dev_objects;
 
-    -- Output result
     IF dev_objects.COUNT > 0 THEN
-        dbms_output.put_line('Missing objects:');
+        dbms_output.put_line('Elements to rerender:');
         FOR i IN 1..dev_objects.COUNT LOOP
             DBMS_OUTPUT.PUT_LINE(dev_objects(i));
         END LOOP;
@@ -345,7 +343,4 @@ BEGIN
         DBMS_OUTPUT.PUT_LINE('No missing objects found.');
     END IF;
 
-
-    -- Truncate temp table
---    EXECUTE IMMEDIATE 'TRUNCATE TABLE TEMP_TABLE2';
 END;
