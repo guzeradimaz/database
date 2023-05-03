@@ -29,10 +29,12 @@ return xml_property; end get_value_from_xml;
 
 CREATE OR REPLACE PACKAGE xml_package AS
     FUNCTION process_select(xml_string IN varchar2) RETURN sys_refcursor; 
-    FUNCTION xml_select (xml_string in varchar2 ) RETURN varchar2; 
-    FUNCTION where_property (xml_string in varchar2 ) RETURN varchar2;
+    FUNCTION xml_select (xml_string in varchar2 ) RETURN varchar2;
+    FUNCTION where_property (xml_string in varchar2 ) RETURN varchar2; 
+    FUNCTION xml_insert(xml_string in varchar2) RETURN varchar2; 
+    FUNCTION xml_update(xml_string in varchar2) RETURN varchar2; 
+    FUNCTION xml_delete(xml_string in varchar2) RETURN varchar2;
 END xml_package;
-
 
 
 CREATE OR REPLACE PACKAGE BODY xml_package AS
@@ -111,3 +113,84 @@ CREATE OR REPLACE PACKAGE BODY xml_package AS
 END xml_package;
 
 
+DECLARE
+  cur sys_refcursor;
+BEGIN
+  cur := xml_package.process_select( 
+    '<Operation>
+      <QueryType>SELECT</QueryType>
+      <OutputColumns>
+        <Column>students.id</Column>
+        <Column>students.name</Column>
+        <Column>groups.id</Column>
+      </OutputColumns>
+      <Tables>
+        <Table>students</Table>
+        <Table>groups</Table>
+      </Tables>
+      <Joins>
+        <Join>
+          <Type>LEFT JOIN</Type>
+          <Condition>groups.id = students.group_id</Condition>
+        </Join>
+      </Joins>
+      <Where>
+        <Conditions>
+          <Body>students.id = 5</Body>
+        </Conditions>
+      </Where>
+    </Operation>'
+  ); 
+END;
+
+DECLARE
+    cur  sys_refcursor;
+    BEGIN
+    cur := xml_package.process_select( 
+    '<Operation>
+    <QueryType> SELECT
+    </QueryType>
+    <OutputColumns>
+    <Column>students.id</Column>
+    <Column>students.name</Column>
+    <Column>groups.id</Column>
+    </OutputColumns>
+    <Tables>
+    <Table>students</Table>
+    <Table>groups</Table>
+    </Tables>
+    <Joins>
+    <Join>
+    <Type>LEFT JOIN</Type>
+    <Condition>groups.id = students.group_id</Condition>
+    </Join>
+    </Joins>
+    <Where>
+    <Conditions>
+    <Condition>
+    <Body>students.id = 5</Body>
+    <ConditionOperator>OR</ConditionOperator>
+    </Condition>
+    <Condition>
+    <Body>groups.name IN</Body>
+    <Operation>
+    <QueryType>SELECT</QueryType>
+    <OutputColumns>
+    <Column>name</Column>
+    </OutputColumns>
+    <Tables>
+    <Table>groups</Table>
+    </Tables>
+    <Where>
+    <Conditions>
+    <Condition>
+    <Body>c_val = 10</Body>
+    </Condition>
+    </Conditions>
+    </Where>
+    </Operation>
+    </Condition>
+    </Conditions>
+    </Where>
+    </Operation>');
+END;
